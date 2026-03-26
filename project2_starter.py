@@ -101,6 +101,31 @@ def get_listing_details(listing_id) -> dict:
     policy_number = policy_match.group(1) if policy_match else ""    
 
     host_type = "Superhost" if "Superhost" in page_text else "Not Superhost"
+    overview_heading = soup.find("h2", string=re.compile(r"hosted by", re.I))
+    host_name = ""
+    room_type = ""
+
+    if overview_heading is not None:
+        heading_text = overview_heading.get_text(" ", strip=True).replace("\xa0", " ")
+        host_match = re.search(r"hosted by\s+(.+)$", heading_text, re.I)
+        if host_match:
+            host_name = host_match.group(1).strip()
+        if heading_text.lower().startswith("entire"):
+            room_type = "Entire Room"
+        elif heading_text.lower().startswith("private room"):
+            room_type = "Private Room"
+    location_match = re.search(r"Location\s*([0-9]\.[0-9])", page_text)
+    location_rating = float(location_match.group(1)) if location_match else 0.0
+    return {listing_id: {
+            "policy_number": policy_number,
+            "host_type": host_type,
+            "host_name": host_name,
+            "room_type": room_type,
+            "location_rating": location_rating,
+        }
+    }       
+
+
 
     # ==============================
     # YOUR CODE ENDS HERE
@@ -233,12 +258,18 @@ class TestCases(unittest.TestCase):
         html_list = ["467507", "1550913", "1944564", "4614763", "6092596"]
 
         # TODO: Call get_listing_details() on each listing id above and save results in a list.
-
+        details_list = [get_listing_details(listing_id) for listing_id in html_list]
         # TODO: Spot-check a few known values by opening the corresponding listing_<id>.html files.
+
         # 1) Check that listing 467507 has the correct policy number "STR-0005349".
         # 2) Check that listing 1944564 has the correct host type "Superhost" and room type "Entire Room".
         # 3) Check that listing 1944564 has the correct location rating 4.9.
-        pass
+        self.assertEqual(details_list[0]["467507"]["policy_number"], "STR-0005349")
+        self.assertEqual(details_list[2]["1944564"]["host_type"], "Superhost")
+        self.assertEqual(details_list[2]["1944564"]["room_type"], "Entire Room")
+        self.assertEqual(details_list[2]["1944564"]["location_rating"], 4.9)
+
+
 
     def test_create_listing_database(self):
         # TODO: Check that each tuple in detailed_data has exactly 7 elements:
