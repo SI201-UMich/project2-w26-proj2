@@ -189,7 +189,21 @@ def output_csv(data, filename) -> None:
     # ==============================
     # YOUR CODE STARTS HERE
     # ==============================
-    pass
+    sorted_data = sorted(data, key = lambda row: row[6], reverse=True)
+
+    with open(filename, "w", newline="", encoding = "utf-8-sig") as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerow([
+            "Listing Title",
+            "Listing ID",
+            "Policy Number",
+            "Host Type",
+            "Host Name",
+            "Room Type",
+            "Location Rating",
+        ])
+        writer.writerows(sorted_data)
+
     # ==============================
     # YOUR CODE ENDS HERE
     # ==============================
@@ -310,6 +324,14 @@ class TestCases(unittest.TestCase):
         # TODO: Call output_csv() to write the detailed_data to a CSV file.
         # TODO: Read the CSV back in and store rows in a list.
         # TODO: Check that the first data row matches ["Guesthouse in San Francisco", "49591060", "STR-0000253", "Superhost", "Ingrid", "Entire Room", "5.0"].
+        output_csv(self.detailed_data, out_path)
+
+        with open(out_path, "r", encoding="utf-8-sig") as csv_file:
+            rows = list(csv.reader(csv_file))
+        self.assertEqual(
+            rows[1],
+            ["Guesthouse in San Francisco", "49591060", "STR-0000253", "Superhost", "Ingrid", "Entire Room", "5.0"]
+        )
 
         os.remove(out_path)
 
@@ -325,7 +347,9 @@ class TestCases(unittest.TestCase):
 
 
 def main():
-    detailed_data = create_listing_database(os.path.join("html_files", "search_results.html"))
+    base_dir = os.path.abspath(os.path.dirname(__file__))
+    search_results_path = os.path.join(base_dir, "html_files","search_results.html")
+    detailed_data = create_listing_database(search_results_path)
     output_csv(detailed_data, "airbnb_dataset.csv")
 
 
