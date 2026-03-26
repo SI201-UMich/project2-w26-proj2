@@ -1,5 +1,5 @@
 # SI 201 HW4 (Library Checkout System)
-# Your name:
+# Your name: Sophia Jun and Kayla Sirefman
 # Your student id:
 # Your email:
 # Who or what you worked with on this homework (including generative AI like ChatGPT):
@@ -39,9 +39,29 @@ def load_listing_results(html_path) -> list[tuple]:
     """
     # TODO: Implement checkout logic following the instructions
     # ==============================
-    # YOUR CODE STARTS HERE
+
     # ==============================
-    pass
+    with open(html_path, "r", encoding = "utf-8-sig") as file:
+        soup = BeautifulSoup(file, "html.parser")
+        
+        listing_results = []
+
+        for title_tag in soup.find_all(attrs={"data-testid": "listing-card-title"}):
+            title = title_tag.get_text(strip=True)
+            listing_id = ""
+
+            title_id = title_tag.get("id", "")
+            id_match = re.search(r"title_(\d+)", title_id)
+            if id_match:
+                listing_id = id_match.group(1)
+
+            if listing_id:
+                listing_results.append((title, listing_id))
+
+        return listing_results
+
+
+
     # ==============================
     # YOUR CODE ENDS HERE
     # ==============================
@@ -70,7 +90,18 @@ def get_listing_details(listing_id) -> dict:
     # ==============================
     # YOUR CODE STARTS HERE
     # ==============================
-    pass
+    base_dir = os.path.abspath(os.path.dirname(__file__))
+    html_path = os.path.join(base_dir, "html_files", f"listing_{listing_id}.html")
+
+    with open(html_path, "r", encoding="utf-8-sig") as file:
+        soup = BeautifulSoup(file, "html.parser")
+    page_text = soup.get_text(" ", strip=True)
+
+    policy_match = re.search(r"Policy number:\s*([A-Za-z0-9\-]+)", page_text)
+    policy_number = policy_match.group(1) if policy_match else ""    
+
+    host_type = "Superhost" if "Superhost" in page_text else "Not Superhost"
+
     # ==============================
     # YOUR CODE ENDS HERE
     # ==============================
@@ -195,7 +226,8 @@ class TestCases(unittest.TestCase):
     def test_load_listing_results(self):
         # TODO: Check that the number of listings extracted is 18.
         # TODO: Check that the FIRST (title, id) tuple is  ("Loft in Mission District", "1944564").
-        pass
+        self.assertEqual(len(self.listings), 18)
+        self.assertEqual(self.listings[0], ("Loft in Mission District", "1944564"))
 
     def test_get_listing_details(self):
         html_list = ["467507", "1550913", "1944564", "4614763", "6092596"]
