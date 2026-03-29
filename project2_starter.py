@@ -226,7 +226,21 @@ def avg_location_rating_by_room_type(data) -> dict:
     # ==============================
     # YOUR CODE STARTS HERE
     # ==============================
-    pass
+    ratings_by_room_type = {}
+
+    for row in data:
+        room_type = row[5]
+        location_rating = row[6]
+
+        if location_rating == 0.0:
+            continue
+        if room_type not in ratings_by_room_type:
+            ratings_by_room_type[room_type] = []
+        ratings_by_room_type[room_type].append(location_rating)
+    averages = {}
+    for room_type, ratings in ratings_by_room_type.items():
+        averages[room_type] = sum(ratings) / len(ratings)
+    return averages 
     # ==============================
     # YOUR CODE ENDS HERE
     # ==============================
@@ -247,7 +261,20 @@ def validate_policy_numbers(data) -> list[str]:
     # ==============================
     # YOUR CODE STARTS HERE
     # ==============================
-    pass
+    invalid_listings = []
+    valid_pattern = re.compile(r"^(STR-\d{7}|\d{4}-\d{6}STR)$", re.I)
+
+    for row in data:
+        listing_id = row[1]
+        policy_number = row[2].strip()
+
+        if policy_number.lower() in ["pending", "exempt"]:
+            continue
+
+        if not valid_pattern.match(policy_number):
+            invalid_listings.append(listing_id)
+
+    return invalid_listings
     # ==============================
     # YOUR CODE ENDS HERE
     # ==============================
@@ -267,7 +294,26 @@ def google_scholar_searcher(query):
     # ==============================
     # YOUR CODE STARTS HERE
     # ==============================
-    pass
+    url = "https://scholar.google.com/scholar"
+    params = {"q": query}
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
+            "AppleWebKit/537.36 (KHTML, Like Gecko) "
+            "Chrome/122.0.0.0 Safari/537.36"
+        )
+    }
+    response = requests.get(url, params = params, headers = headers, timeout=10)
+    response.raise_for_status()
+
+    soup = BeautifulSoup(response.text, "html.parser")
+    titles = []
+
+    for title_tag in soup.find_all("h3", class_="gs_rt"):
+        title = title_tag.get_text(" ", strip=True)
+        if title:
+            titles.append(title)
+    return titles
     # ==============================
     # YOUR CODE ENDS HERE
     # ==============================
@@ -338,12 +384,16 @@ class TestCases(unittest.TestCase):
     def test_avg_location_rating_by_room_type(self):
         # TODO: Call avg_location_rating_by_room_type() and save the output.
         # TODO: Check that the average for "Private Room" is 4.9.
-        pass
+        avg_ratings = avg_location_rating_by_room_type(self.detailed_data)
+        self.assertEqual(avg_ratings["Private Room"], 4.9)
+
 
     def test_validate_policy_numbers(self):
         # TODO: Call validate_policy_numbers() on detailed_data and save the result into a variable invalid_listings.
         # TODO: Check that the list contains exactly "16204265" for this dataset.
-        pass
+        invalid_listings = validate_policy_numbers(self.detailed_data)
+        self.assertEqual(invalid_listings, ["16204265"])
+
 
 
 def main():
